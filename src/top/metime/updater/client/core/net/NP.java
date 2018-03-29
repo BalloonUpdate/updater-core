@@ -73,7 +73,10 @@ public abstract class NP
 	//completed
 	public void writeString(String str) throws IOException
 	{
-		final int max = 1024;
+		//final int max = 1024;
+		
+		//这里似乎不增加程度也没影响
+		final int max = 10240;
 		
 		byte[] bytes = str.getBytes(Charset.forName("UTF-8"));
 		
@@ -93,7 +96,10 @@ public abstract class NP
 	//completed
 	public String readString() throws IOException
 	{
-		final int maxTransportLength = 1024;
+		//final int maxTransportLength = 1024;
+		
+		//这里增加长度 因为有的文件中文名过长就会导致有的中文乱码问题
+		final int maxTransportLength = 10240;
 		
 		StringBuilder sb = new StringBuilder();
 		
@@ -144,7 +150,10 @@ public abstract class NP
 	//completed
 	public void writeBytes(byte[] bytes) throws IOException
 	{
-		final int maxTransportLength = 1024;
+		//final int maxTransportLength = 1024;
+		
+		//这里增加长度 因为有的文件中文名过长就会导致有的中文乱码问题
+		final int maxTransportLength = 10240;
 		
 		//告诉客户端数组的长度
 		netOut.writeInt(bytes.length);
@@ -162,7 +171,10 @@ public abstract class NP
 	//completed
 	public byte[] readByteArray() throws IOException
 	{
-		final int maxTransportLength = 1024;
+		//final int maxTransportLength = 1024;
+		
+		//这里增加长度 因为有的文件中文名过长就会导致有的中文乱码问题
+		final int maxTransportLength = 10240;
 		
 		//接受服务端发来的数组的长度
 		int bytesLength = netIn.readInt();
