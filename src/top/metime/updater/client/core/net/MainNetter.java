@@ -17,7 +17,7 @@ import top.metime.updater.client.core.tools.CompareFolder;
 
 public class MainNetter extends NP
 {
-	private static final byte[] ACK = { 86, 127, 94, 88, 44, 51, 73, 32 };
+	private static final byte[] ACK_CODE = { 86, 127, 94, 88, 44, 51, 73, 32 };
 	
 	private String host;
 	private int port;
@@ -104,9 +104,16 @@ public class MainNetter extends NP
 		downloadQueue.clear();
 	}
 
+	/**
+	 * 类的入口方法
+	 *
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
 	public void start() throws UnknownHostException, IOException
 	{
-		rulesc = netIn.readInt();//获取需要同步的规则数
+		//获取需要同步的规则数
+		rulesc = netIn.readInt();//NP.java: readInt();
 		
 		//设置进度条为确定模式
 		mWindowCallback.setProgressIndeterminate(false);
@@ -121,23 +128,27 @@ public class MainNetter extends NP
 			
 			mWindowCallback.changeStateBarText("正在接收 "+currentProgressText+" 同步规则");
 			
-			String clientPath = readString();
-			String unrealDir = readString();
-			String ignore = readString();
+			String clientPath = readString();//NP.java: readString();
+			String virtualFolder = readString();//NP.java: readString();
+			String ignore = readString();//NP.java: readString();
 			
 			
-			File root = new File(clientPath);//根目录
-			MFolder droot = new MFolder(new JSONObject(unrealDir));//虚拟文件夹
-			JSONArray jfja = new JSONArray(ignore);
+			File RRootFolder = new File(clientPath);//真实的根目录
+			MFolder VRootFolder = new MFolder(new JSONObject(virtualFolder));//虚拟的根目录
+			
+			JSONArray ignFiles = new JSONArray(ignore);
 			HashSet<String> ignoreFiles = new HashSet<>();
-			for(int cc=0;cc<jfja.length();cc++)
+			for(int n=0;n<ignFiles.length();n++)
 			{
-				ignoreFiles.add(clientPath+"?"+jfja.getString(cc).replace('/', '?').replace('\\', '?'));
+				ignoreFiles.add(ignFiles.getString(n).replaceAll("\\./", "").replaceAll("\\.\\\\", ""));
+//				System.out.println("ignores"+n+" > "+ignFiles.getString(n).replaceAll("\\./", "").replaceAll("\\.\\\\", ""));调试输出
 			}
+			
+//			if(ignoreFiles)
 			
 			//对比文件
 			mWindowCallback.changeStateBarText("正在对比文件，规则总进度 "+currentProgressText);
-			CompareFolder comparer = new CompareFolder(droot, root, ignoreFiles);
+			CompareFolder comparer = new CompareFolder(VRootFolder, RRootFolder, ignoreFiles);
 			downloadQueue = comparer.compare();
 			
 			//设置进度条为确定模式

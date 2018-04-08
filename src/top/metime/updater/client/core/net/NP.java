@@ -10,12 +10,17 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+/**
+ * 此类包含了常用的传输方法,主要用于被继承
+ * NP(NetPrococol)
+ *
+ * @author innc-table
+ */
 public abstract class NP
 {
 	protected DataInputStream netIn;
 	protected DataOutputStream netOut;
 	
-	//completed
 	public void writeFile(File file) throws IOException
 	{
 		//写出文件长度
@@ -33,7 +38,6 @@ public abstract class NP
 		}
 	}
 	
-	//completed
 	public void readFile(File file, long length) throws IOException
 	{
 		file.createNewFile();
@@ -61,7 +65,6 @@ public abstract class NP
 		}
 	}
 	
-	//completed
 	public boolean Ack(byte[] ack) throws IOException
 	{
 		netOut.write(ack);
@@ -70,7 +73,6 @@ public abstract class NP
 		return Arrays.equals(inres, ack);
 	}
 
-	//completed
 	public void writeString(String str) throws IOException
 	{
 		//final int max = 1024;
@@ -93,7 +95,6 @@ public abstract class NP
 		netOut.write(bytes, at*max, bt);
 	}
 	
-	//completed
 	public String readString() throws IOException
 	{
 		//final int maxTransportLength = 1024;
@@ -123,31 +124,26 @@ public abstract class NP
 		return sb.toString();
 	}
 
-	//completed
 	public void writeInt(int value) throws IOException
 	{
 		netOut.writeInt(value);
 	}
 	
-	//completed
 	public int readInt() throws IOException
 	{
 		return netIn.readInt();
 	}
 	
-	//completed
 	public void writeBoolean(boolean bool) throws IOException
 	{
 		netOut.writeBoolean(bool);
 	}
 	
-	//completed
 	public boolean readBoolean() throws IOException
 	{
 		return netIn.readBoolean();
 	}
 
-	//completed
 	public void writeBytes(byte[] bytes) throws IOException
 	{
 		//final int maxTransportLength = 1024;
@@ -168,7 +164,6 @@ public abstract class NP
 		netOut.write(bytes, at*maxTransportLength, bt);
 	}
 
-	//completed
 	public byte[] readByteArray() throws IOException
 	{
 		//final int maxTransportLength = 1024;

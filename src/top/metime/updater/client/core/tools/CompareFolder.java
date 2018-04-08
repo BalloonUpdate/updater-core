@@ -9,8 +9,8 @@ import top.metime.updater.client.core.memory.MFolder;
 
 public class CompareFolder 
 {
-	private MFolder unrealDir;
-	private File realDir;
+	private MFolder VFile;
+	private File RFile;
 	private HashSet<String> ignoreFiles;
 	
 	private HashSet<DownloadTask> willDownload;
@@ -18,8 +18,8 @@ public class CompareFolder
 	
 	public CompareFolder(MFolder unrealDir, File realDir, HashSet<String> ignoreFiles)
 	{
-		this.unrealDir = unrealDir;
-		this.realDir = realDir;
+		this.VFile = unrealDir;
+		this.RFile = realDir;
 		this.ignoreFiles = ignoreFiles;
 		
 		willDownload = new HashSet<>();
@@ -27,128 +27,119 @@ public class CompareFolder
 	
 	public HashSet<DownloadTask> compare()
 	{
-		compare(unrealDir, realDir);
+		compare(VFile, RFile);
 		return willDownload;
 	}
 	
-	private void compare(MFolder unrealDir, File realDir)
+	private void compare(MFolder VFile, File RFile)
 	{
-		positiveCompare(unrealDir, realDir);
-		contrastiveCompare(unrealDir, realDir);
+		positiveCompare(VFile, RFile);
+		contrastiveCompare(VFile, RFile);
 	}
 	
-	
-	private void realFileUnreal(MFolder unrealFolder, File realSubFile)
+	/**
+	 * 正向对比，计算需要删除的文件
+	 * 
+	 * @param VFile 虚拟文件夹对象
+	 * @param RFile 真实文件夹对象
+	 */
+	private void positiveCompare(MFolder VFile, File RFile)
 	{
-		boolean exists = false;
+		//只计算需要删除的文件
+		if (RFile.exists())//如果真实文件夹存在
+		{
+			for (File perRsub : RFile.listFiles())//循环真实文件夹子文件
+			{
+				String currentPath = new File("").getAbsolutePath();
+				String relativePath = perRsub.getAbsolutePath().substring(currentPath.length()+1);
+				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", "");
+				relativePath = relativePath.replaceAll("\\\\", "/").replaceAll("^.*?/", "");
+				//此处为正则表达式，4个反斜杠才代表一个反斜杠
 		
-		for (MFileOrFolder per : unrealFolder.getAllList())
-		{
-			if ((per instanceof MFile)||per.getName().equals(realSubFile.getName()))
-			{
-				exists = true;
-				break;
-			}
-		}
-		if (!exists)
-		{
-			realSubFile.delete();
-		}
-	}
-	
-	private void realFolderUnreal(MFolder unrealFolder, File realSubFile)
-	{
-		boolean exists = false;
-		
-		for (MFileOrFolder per : unrealFolder.getAllList())
-		{
-			if((per instanceof MFolder)||per.getName().equals(realSubFile.getName()))
-			{
-				exists = true;
-				break;
-			}
-		}
-		if (!exists)
-		{
-			DeleteFolder.delfolder(realSubFile);
-		}
-	}
-	
-	
-	private void positiveCompare(MFolder unrealDir, File realDir)
-	{
-		if (realDir.exists())//如果实际根目录存在
-		{
-			for (File perl : realDir.listFiles())//循环实际文件夹子文件
-			{
-				//ignoreFiles
-				if(!ignoreFiles.contains(perl.getAbsolutePath().substring((int) (new File("").getAbsolutePath().length()+1)).replace('/', '?').replace('\\', '?')))
+				//如果没有被忽略掉
+//				System.out.println(">>>>   "+relativePath);//调试用
+				if(!ignoreFiles.contains(relativePath))
 				{
-					if (perl.isFile())
+					if(VFile.contains(perRsub))//如果虚拟文件夹包含
 					{
-						realFileUnreal(unrealDir, perl);
-					}else{
-						realFolderUnreal(unrealDir, perl);
+						if(perRsub.isDirectory())//如果perRsub是一个目录
+						{
+							//进一步计算
+							positiveCompare((MFolder) VFile.getFileOrFolder(perRsub.getName()), perRsub);
+						}else{//如果perRsub是一个文件
+							MFile vf = (MFile) VFile.getFileOrFolder(perRsub.getName());
+							File  rf = perRsub;
+							
+							String rMd5 = MD5.getMD5(rf);
+							String vMd5 = vf.getMD5();
+							
+							//如果校验值不匹配
+							if(!rMd5.equals(vMd5))
+							{
+								DeleteFolder.delfolder(rf);
+							}
+						}
+					}else{//如果虚拟文件夹不包含
+						DeleteFolder.delfolder(perRsub);
 					}
 				}
 			}
 		}else{
-			realDir.mkdirs();//创建实际根目录
+			//RFile.mkdirs();//创建实际目录
 		}
 		
 	}
-	private void contrastiveCompare(MFolder unrealDir, File realDir)
+	
+	/**
+	 * 反向对比，计算要下载的文件
+	 * 
+	 * @param VFile 虚拟文件夹对象
+	 * @param RFile 真实文件夹对象
+	 */
+	private void contrastiveCompare(MFolder VFile, File RFile)
 	{
-		for (MFileOrFolder per : unrealDir.getAllList())//循环虚拟目录
+		for (MFileOrFolder perVsub : VFile.getAllList())//循环虚拟目录
 		{
-			
-			if ((per instanceof MFolder))//如果是M文件夹
+			if ((perVsub instanceof MFolder))//如果是perV是文件夹
 			{
-				MFolder d = (MFolder)per;
-				File ldir = new File(realDir, d.getName());
-				ldir.mkdirs();
-				compare(d, ldir);
-			}
-			else//如果是M文件
-			if ((per instanceof MFile))
-			{
-				MFile fd = (MFile)per;
-				compareFile(fd, new File(realDir, fd.getName()));
-			}
-		}
-	}
-	
-	
-	
-	
-	private void compareFile(MFile unrealFolder, File file)
-	{
-		if(!ignoreFiles.contains(file.getAbsolutePath().substring((int) (new File("").getAbsolutePath().length()+1)).replace('/', '?').replace('\\', '?')))
-		{
-			if (file.exists())
-			{
-				if (file.isFile())
+				MFolder vfolder = (MFolder)perVsub;
+				File rfolder = new File(RFile, vfolder.getName());
+				
+				if(rfolder.exists())//如果实际文件夹存在
 				{
-					if (!MD5.getMD5(file).equals(unrealFolder.getMD5()))
+					//进一步计算
+					contrastiveCompare(vfolder, rfolder);
+				}else{//如果实际文件夹不存在
+					//创建文件夹
+					rfolder.mkdirs();
+					
+					//进一步计算
+					contrastiveCompare(vfolder, rfolder);
+				}
+			}
+			else//如果是perV子文件是文件
+			if ((perVsub instanceof MFile))
+			{
+				MFile mfile = (MFile)perVsub;
+				File localFile = new File(RFile, mfile.getName());
+				
+//				compareFile(mfile, new File(RFile, mfile.getName()));
+				String currentPath = new File("").getAbsolutePath();
+				String relativePath = localFile.getAbsolutePath().substring(currentPath.length()+1);
+				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", "");
+				relativePath = relativePath.replaceAll("\\\\", "/").replaceAll("^.*?/", "");
+				//此处为正则表达式，4个反斜杠才代表一个反斜杠
+				
+				if(!ignoreFiles.contains(relativePath))
+				{
+					if(!localFile.exists())
 					{
-						DeleteFolder.delfolder(file);
-						willDownload.add(new DownloadTask(file, unrealFolder));
+						willDownload.add(new DownloadTask(localFile, mfile));
 					}
 				}
-				else
-				{
-					DeleteFolder.delfolder(file);
-					willDownload.add(new DownloadTask(file, unrealFolder));
-				}
-			}
-			else
-			{
-				willDownload.add(new DownloadTask(file, unrealFolder));
 			}
 		}
-		
 	}
-	
 	
 	
 }

@@ -2,8 +2,19 @@ package top.metime.updater.client.core.tools;
 
 import java.io.File;
 
+/**
+ * 该类提供方便的删除文件或者文件夹的方法
+ *
+ * @author innc-table
+ */
 public class DeleteFolder 
 {
+
+	/**
+	 * 方便的删除文件或者文件夹的方法
+	 *
+	 * @param dir 文件或者文件夹对象
+	 */
 	public static void delfolder(File dir)
 	{
 		if (!dir.exists())

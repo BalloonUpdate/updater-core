@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.Socket;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import top.metime.updater.client.core.memory.MConfig;
 import top.metime.updater.client.core.net.MainNetter;
@@ -29,6 +31,13 @@ public class Main
 		w.setStateBarText("完成！");
 		w.destory();
 		
+		try
+		{
+			Thread.sleep(400);
+		}catch(InterruptedException ex)
+		{
+			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+		}
 		
 		if(!launcherFileName.equalsIgnoreCase("null"))
 		{
