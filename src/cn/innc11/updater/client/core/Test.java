@@ -1,4 +1,4 @@
-package top.metime.updater.client.core;
+package cn.innc11.updater.client.core;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Set;
 import org.json.JSONObject;
 
-public class T
+public class Test
 {
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{

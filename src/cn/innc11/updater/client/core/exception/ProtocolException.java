@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.exception;
+package cn.innc11.updater.client.core.exception;
 
 import java.io.IOException;
 

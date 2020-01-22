@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.memory;
+package cn.innc11.updater.client.core.structure;
 
 import java.io.File;
 import java.util.LinkedList;

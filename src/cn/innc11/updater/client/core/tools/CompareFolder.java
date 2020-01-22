@@ -1,11 +1,11 @@
-package top.metime.updater.client.core.tools;
+package cn.innc11.updater.client.core.tools;
 
 import java.io.File;
 import java.util.HashSet;
-import top.metime.updater.client.core.memory.DownloadTask;
-import top.metime.updater.client.core.memory.MFile;
-import top.metime.updater.client.core.memory.MFileOrFolder;
-import top.metime.updater.client.core.memory.MFolder;
+import cn.innc11.updater.client.core.structure.DownloadTask;
+import cn.innc11.updater.client.core.structure.MFile;
+import cn.innc11.updater.client.core.structure.MFileOrFolder;
+import cn.innc11.updater.client.core.structure.MFolder;
 
 public class CompareFolder 
 {
@@ -122,7 +122,12 @@ public class CompareFolder
 			{
 				MFile mfile = (MFile)perVsub;
 				File localFile = new File(RFile, mfile.getName());
-				
+
+				if(localFile.exists() && localFile.length()==0)
+				{
+					continue;
+				}
+
 //				compareFile(mfile, new File(RFile, mfile.getName()));
 				String currentPath = new File("").getAbsolutePath();
 				String relativePath = localFile.getAbsolutePath().substring(currentPath.length()+1);

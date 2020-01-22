@@ -1,4 +1,4 @@
-package top.metime.updater.client.core;
+package cn.innc11.updater.client.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,36 +8,27 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.Socket;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import top.metime.updater.client.core.memory.MConfig;
-import top.metime.updater.client.core.net.MainNetter;
-import top.metime.updater.client.core.view.Window;
+import cn.innc11.updater.client.core.structure.MConfig;
+import cn.innc11.updater.client.core.net.Nett;
+import cn.innc11.updater.client.core.view.Window;
 
 public class Main 
 {
 	private final String propertiesFileName = "config.properties";
 	
-	public void main(Socket socket, String host, int port, String launcherFileName) throws FileNotFoundException, IOException, IllegalArgumentException, IllegalAccessException
-	{
+	public void main(Socket socket, String host, int port, String launcherFileName) throws FileNotFoundException, IOException, IllegalArgumentException, IllegalAccessException, InterruptedException {
 		//创建窗口
 		Window w = new Window();
 		
-		
-		MainNetter net = new MainNetter(socket, host, port, w);
+		Nett net = new Nett(socket, host, port, w);
 		net.start();
 		
 		w.setStateBarText("完成！");
+
+		Thread.sleep(3000);
+
 		w.destory();
-		
-		try
-		{
-			Thread.sleep(400);
-		}catch(InterruptedException ex)
-		{
-			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-		}
 		
 		if(!launcherFileName.equalsIgnoreCase("null"))
 		{

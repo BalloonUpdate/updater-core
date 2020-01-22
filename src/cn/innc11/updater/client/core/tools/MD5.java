@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.tools;
+package cn.innc11.updater.client.core.tools;
 
 import java.io.File;
 import java.io.FileInputStream;

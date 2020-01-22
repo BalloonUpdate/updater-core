@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.net;
+package cn.innc11.updater.client.core.net;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,12 +10,12 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import top.metime.updater.client.core.callback.ui.MainWindowCallback;
-import top.metime.updater.client.core.memory.DownloadTask;
-import top.metime.updater.client.core.memory.MFolder;
-import top.metime.updater.client.core.tools.CompareFolder;
+import cn.innc11.updater.client.core.callback.ui.MainWindowCallback;
+import cn.innc11.updater.client.core.structure.DownloadTask;
+import cn.innc11.updater.client.core.structure.MFolder;
+import cn.innc11.updater.client.core.tools.CompareFolder;
 
-public class MainNetter extends NP
+public class Nett extends NP
 {
 	private static final byte[] ACK_CODE = { 86, 127, 94, 88, 44, 51, 73, 32 };
 	
@@ -26,7 +26,7 @@ public class MainNetter extends NP
 	private HashSet<DownloadTask> downloadQueue = new HashSet<>();
 	private MainWindowCallback mWindowCallback;
 
-	public MainNetter(Socket socket, String host, int port, MainWindowCallback mWindowCallback) throws IOException
+	public Nett(Socket socket, String host, int port, MainWindowCallback mWindowCallback) throws IOException
 	{
 		this.socket = socket;
 		this.host = host;
@@ -37,10 +37,9 @@ public class MainNetter extends NP
 		netOut = new DataOutputStream(socket.getOutputStream());
 	}
 	
-	private void netToFile(File file, String key, long length) throws IOException
+	private void getFile(File file, String key, long length) throws IOException
 	{
-		//重置进度条
-		mWindowCallback.changeProgressValue(0);
+		mWindowCallback.changeProgressValue(0); // 重置进度条
 		
 		file.createNewFile();
 		
@@ -49,20 +48,16 @@ public class MainNetter extends NP
 		
 		netOut.writeUTF(key);
 		
-		//无用 接收文件长度
-		long len = netIn.readLong();
-//		System.out.println("RecvFilelen："+len);
-		
+		long len = netIn.readLong(); // 接收文件长度
+
 		FileOutputStream fos = new FileOutputStream(file);
 	
 		byte[] buf = new byte[4096];
 		int ac = (int)(length / buf.length);
 		int bc = (int)(length % buf.length);
 		
-//		System.out.println("len："+length+"   ac："+ac+"   bc："+bc+"    NetToFile64");
-		
 		int cp = 0;
-		for (int c = 0; c < ac; c++)
+		for (int i = 0; i < ac; i++)
 		{
 			netIn.readFully(buf);
 			mWindowCallback.changeProgressValue(++cp * 1000 / ac);
@@ -70,10 +65,11 @@ public class MainNetter extends NP
 			fos.write(buf, 0, buf.length);
 		}
 	
-		for (int c = 0; c < bc; c++)
+		for (int i = 0; i < bc; i++)
 		{
 			fos.write(netIn.readByte());
 		}
+
 		fos.close();
 	}
 
@@ -82,7 +78,7 @@ public class MainNetter extends NP
 		int counter = 0;
 		for (DownloadTask per : downloadQueue)
 		{
-			mWindowCallback.appendElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     MD5:  " + per.fd.getMD5().toUpperCase());
+			mWindowCallback.appendElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
 			mWindowCallback.changeWindowTitleText(String.valueOf(++counter));
 //			System.out.println("Name："+per.fd.getName()+"   Length："+per.fd.getLength());
 			//延时600
@@ -95,45 +91,35 @@ public class MainNetter extends NP
 		{
 			currentIndex++;//计数++
 			
-			mWindowCallback.changeWindowTitleText("当前规则的下载进度计数 "+(currentIndex+"/" + downloadQueue.size()));
-			netToFile(per.file, per.fd.getMD5(), per.fd.getLength());
-			mWindowCallback.removedElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     MD5:  " + per.fd.getMD5().toUpperCase());
+			mWindowCallback.changeWindowTitleText("队列： "+(currentIndex+"/" + downloadQueue.size()));
+			getFile(per.file, per.fd.getMD5(), per.fd.getLength());
+			mWindowCallback.removedElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
 			try {Thread.sleep(20);} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		netOut.writeBoolean(false);//没有下一个文件
 		downloadQueue.clear();
 	}
 
-	/**
-	 * 类的入口方法
-	 *
-	 * @throws UnknownHostException
-	 * @throws IOException
-	 */
 	public void start() throws UnknownHostException, IOException
 	{
-		//获取需要同步的规则数
-		rulesc = netIn.readInt();//NP.java: readInt();
+		rulesc = netIn.readInt(); // 获取需要同步的规则数
 		
-		//设置进度条为确定模式
-		mWindowCallback.setProgressIndeterminate(false);
+		mWindowCallback.setProgressIndeterminate(false); // 设置进度条为确定模式
 	
-		for (int c = 0; c < rulesc; c++)
+		for (int i = 0; i < rulesc; i++)
 		{
-			//当前进度文本
-			String currentProgressText = (c + 1) + "/" + rulesc;
+			String currentProgressText = (i + 1) + "/" + rulesc; // 当前进度文本
 			
-			//设置进度条为不确定模式
-			mWindowCallback.setProgressIndeterminate(true);
+			mWindowCallback.setProgressIndeterminate(true); // 设置进度条为不确定模式
 			
 			mWindowCallback.changeStateBarText("正在接收 "+currentProgressText+" 同步规则");
 			
-			String clientPath = readString();//NP.java: readString();
-			String virtualFolder = readString();//NP.java: readString();
-			String ignore = readString();//NP.java: readString();
+			String clientPath = readString();
+			String virtualFolder = readString();
+			String ignore = readString();
 			
 			
-			File RRootFolder = new File(clientPath);//真实的根目录
+			File RRootFolder = new File(clientPath); // 真实的根目录
 			MFolder VRootFolder = new MFolder(new JSONObject(virtualFolder));//虚拟的根目录
 			
 			JSONArray ignFiles = new JSONArray(ignore);
@@ -147,7 +133,7 @@ public class MainNetter extends NP
 //			if(ignoreFiles)
 			
 			//对比文件
-			mWindowCallback.changeStateBarText("正在对比文件，规则总进度 "+currentProgressText);
+			mWindowCallback.changeStateBarText("正在对比文件，进度 "+currentProgressText);
 			CompareFolder comparer = new CompareFolder(VRootFolder, RRootFolder, ignoreFiles);
 			downloadQueue = comparer.compare();
 			
@@ -155,7 +141,7 @@ public class MainNetter extends NP
 			mWindowCallback.setProgressIndeterminate(false);
 			
 			//下载文件
-			mWindowCallback.changeStateBarText("正在下载文件，规则总进度 "+currentProgressText);
+			mWindowCallback.changeStateBarText("总进度 "+currentProgressText);
 			download();
 		}
 		

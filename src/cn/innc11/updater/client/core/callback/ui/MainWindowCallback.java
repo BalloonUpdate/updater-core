@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.callback.ui;
+package cn.innc11.updater.client.core.callback.ui;
 
 public interface MainWindowCallback 
 {

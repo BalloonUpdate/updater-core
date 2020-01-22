@@ -1,4 +1,4 @@
-package top.metime.updater.client.core.view;
+package cn.innc11.updater.client.core.view;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -11,7 +11,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import top.metime.updater.client.core.callback.ui.MainWindowCallback;
+import cn.innc11.updater.client.core.callback.ui.MainWindowCallback;
 
 public class Window implements MainWindowCallback
 {
@@ -36,7 +36,7 @@ public class Window implements MainWindowCallback
 		window = new JFrame();
 		rootPanel = window.getContentPane();
 		currentProgress = new JPanel();
-		descriptionLabel = new JLabel("当前进度");
+		descriptionLabel = new JLabel("进度");
 		progressBar = new JProgressBar();
 		downloadQueue = new JList<>();
 		downloadQueuePanel = new JScrollPane(downloadQueue);
