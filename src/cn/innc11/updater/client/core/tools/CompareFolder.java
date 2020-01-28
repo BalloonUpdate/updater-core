@@ -42,9 +42,8 @@ public class CompareFolder
 			{
 				String currentPath = new File("").getAbsolutePath();
 				String relativePath = everyLocalFile.getAbsolutePath().substring(currentPath.length()+1);
-
-				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", "");
-				relativePath = relativePath.replaceAll("\\\\", "/").replaceAll("^.*?/", "");
+				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", ""); // 去掉 ./ 或者 .\
+				relativePath = relativePath.replaceAll("\\\\", "/");//.replaceAll("^.*/", "");
 
 				if(!ignoreFiles.contains(relativePath))
 				{
@@ -57,12 +56,8 @@ public class CompareFolder
 							RemoteFile rf = (RemoteFile) remote.getFileOrFolder(everyLocalFile.getName());
 							File lf = everyLocalFile;
 							
-							String localMd5 = MD5.getMD5(lf);
+							String localMd5 = lf.length()==0? "null" : MD5.getMD5(lf);
 							String remoteMd5 = rf.getMD5();
-
-							//System.out.println("MD5");
-							//System.out.println("Local:  "+localMd5);
-							//System.out.println("Remote: "+remoteMd5);
 
 							if(!localMd5.equals(remoteMd5))
 							{

@@ -79,7 +79,7 @@ public class Network extends NP
 		{
 			mWindowCallback.appendElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
 			mWindowCallback.changeWindowTitleText("收集信息("+(++counter)+")");
-			try {Thread.sleep(25);} catch (InterruptedException e) {e.printStackTrace();}
+			try {Thread.sleep(3);} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
 		int currentIndex = 0;
@@ -90,7 +90,7 @@ public class Network extends NP
 			mWindowCallback.changeWindowTitleText("下载队列 "+(downloadQueue.size()-currentIndex+1));
 			receiveFile(per.file, per.fd.getMD5(), per.fd.getLength());
 			mWindowCallback.removedElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
-			try {Thread.sleep(5);} catch (InterruptedException e) {e.printStackTrace();}
+			try {Thread.sleep(3);} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		netOut.writeBoolean(false);//没有下一个文件
 		downloadQueue.clear();
