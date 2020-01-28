@@ -6,3 +6,4 @@ build.xml
 manifest.mf
 updater-core*
 updater-score*
+out
