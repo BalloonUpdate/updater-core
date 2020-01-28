@@ -3,84 +3,74 @@ package cn.innc11.updater.client.core.tools;
 import java.io.File;
 import java.util.HashSet;
 import cn.innc11.updater.client.core.structure.DownloadTask;
-import cn.innc11.updater.client.core.structure.MFile;
-import cn.innc11.updater.client.core.structure.MFileOrFolder;
-import cn.innc11.updater.client.core.structure.MFolder;
+import cn.innc11.updater.client.core.structure.RemoteFile;
+import cn.innc11.updater.client.core.structure.RemoteObject;
+import cn.innc11.updater.client.core.structure.RemoteFolder;
 
 public class CompareFolder 
 {
-	private MFolder VFile;
-	private File RFile;
+	private RemoteFolder remoteFolder;
+	private File localFolder;
 	private HashSet<String> ignoreFiles;
 	
-	private HashSet<DownloadTask> willDownload;
+	private HashSet<DownloadTask> willDownload = new HashSet<>();;
 	
-	
-	public CompareFolder(MFolder unrealDir, File realDir, HashSet<String> ignoreFiles)
+	public CompareFolder(RemoteFolder a, File b, HashSet<String> ignoreFiles_)
 	{
-		this.VFile = unrealDir;
-		this.RFile = realDir;
-		this.ignoreFiles = ignoreFiles;
-		
-		willDownload = new HashSet<>();
+		remoteFolder = a;
+		localFolder = b;
+		ignoreFiles = ignoreFiles_;
 	}
 	
 	public HashSet<DownloadTask> compare()
 	{
-		compare(VFile, RFile);
+		compare(remoteFolder, localFolder);
 		return willDownload;
 	}
 	
-	private void compare(MFolder VFile, File RFile)
+	private void compare(RemoteFolder remote, File local)
 	{
-		positiveCompare(VFile, RFile);
-		contrastiveCompare(VFile, RFile);
+		positiveCompare(remote, local);
+		contrastiveCompare(remote, local);
 	}
 	
-	/**
-	 * 正向对比，计算需要删除的文件
-	 * 
-	 * @param VFile 虚拟文件夹对象
-	 * @param RFile 真实文件夹对象
-	 */
-	private void positiveCompare(MFolder VFile, File RFile)
+	private void positiveCompare(RemoteFolder remote, File local)
 	{
-		//只计算需要删除的文件
-		if (RFile.exists())//如果真实文件夹存在
+		if (local.exists())
 		{
-			for (File perRsub : RFile.listFiles())//循环真实文件夹子文件
+			for (File everyLocalFile : local.listFiles())
 			{
 				String currentPath = new File("").getAbsolutePath();
-				String relativePath = perRsub.getAbsolutePath().substring(currentPath.length()+1);
+				String relativePath = everyLocalFile.getAbsolutePath().substring(currentPath.length()+1);
+
 				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", "");
 				relativePath = relativePath.replaceAll("\\\\", "/").replaceAll("^.*?/", "");
-				//此处为正则表达式，4个反斜杠才代表一个反斜杠
-		
-				//如果没有被忽略掉
-//				System.out.println(">>>>   "+relativePath);//调试用
+
 				if(!ignoreFiles.contains(relativePath))
 				{
-					if(VFile.contains(perRsub))//如果虚拟文件夹包含
+					if(remote.contains(everyLocalFile))
 					{
-						if(perRsub.isDirectory())//如果perRsub是一个目录
+						if(everyLocalFile.isDirectory())
 						{
-							//进一步计算
-							positiveCompare((MFolder) VFile.getFileOrFolder(perRsub.getName()), perRsub);
-						}else{//如果perRsub是一个文件
-							MFile vf = (MFile) VFile.getFileOrFolder(perRsub.getName());
-							File  rf = perRsub;
+							positiveCompare((RemoteFolder) remote.getFileOrFolder(everyLocalFile.getName()), everyLocalFile.getAbsoluteFile());
+						}else{
+							RemoteFile rf = (RemoteFile) remote.getFileOrFolder(everyLocalFile.getName());
+							File lf = everyLocalFile;
 							
-							String rMd5 = MD5.getMD5(rf);
-							String vMd5 = vf.getMD5();
-							
-							//如果校验值不匹配
-							if(!rMd5.equals(vMd5))
+							String localMd5 = MD5.getMD5(lf);
+							String remoteMd5 = rf.getMD5();
+
+							//System.out.println("MD5");
+							//System.out.println("Local:  "+localMd5);
+							//System.out.println("Remote: "+remoteMd5);
+
+							if(!localMd5.equals(remoteMd5))
 							{
-								DeleteFolder.delfolder(rf);
+								CompareFolder.delfolder(lf);
 							}
 						}
-					}else{//如果虚拟文件夹不包含
-						DeleteFolder.delfolder(perRsub);
+					}else{
+						CompareFolder.delfolder(everyLocalFile);
 					}
 				}
 			}
@@ -89,61 +79,68 @@ public class CompareFolder
 		}
 		
 	}
-	
-	/**
-	 * 反向对比，计算要下载的文件
-	 * 
-	 * @param VFile 虚拟文件夹对象
-	 * @param RFile 真实文件夹对象
-	 */
-	private void contrastiveCompare(MFolder VFile, File RFile)
+
+	private void contrastiveCompare(RemoteFolder remote, File local)
 	{
-		for (MFileOrFolder perVsub : VFile.getAllList())//循环虚拟目录
+		for (RemoteObject everyRemoteFile : remote.getAllList())
 		{
-			if ((perVsub instanceof MFolder))//如果是perV是文件夹
+			if ((everyRemoteFile instanceof RemoteFolder))
 			{
-				MFolder vfolder = (MFolder)perVsub;
-				File rfolder = new File(RFile, vfolder.getName());
-				
-				if(rfolder.exists())//如果实际文件夹存在
+				RemoteFolder remoteFolder = (RemoteFolder)everyRemoteFile;
+				File localFolder = new File(local.getAbsoluteFile(), remoteFolder.getName());
+
+				if(localFolder.exists())
 				{
-					//进一步计算
-					contrastiveCompare(vfolder, rfolder);
-				}else{//如果实际文件夹不存在
-					//创建文件夹
-					rfolder.mkdirs();
-					
-					//进一步计算
-					contrastiveCompare(vfolder, rfolder);
+					contrastiveCompare(remoteFolder, localFolder);
+				}else{
+					localFolder.mkdirs();
+					contrastiveCompare(remoteFolder, localFolder);
 				}
 			}
-			else//如果是perV子文件是文件
-			if ((perVsub instanceof MFile))
+			else if ((everyRemoteFile instanceof RemoteFile))
 			{
-				MFile mfile = (MFile)perVsub;
-				File localFile = new File(RFile, mfile.getName());
+				RemoteFile remoteFile = (RemoteFile)everyRemoteFile;
+
+				File localFile = new File(local.getAbsoluteFile(), remoteFile.getName());
 
 				if(localFile.exists() && localFile.length()==0)
 				{
 					continue;
 				}
 
-//				compareFile(mfile, new File(RFile, mfile.getName()));
 				String currentPath = new File("").getAbsolutePath();
 				String relativePath = localFile.getAbsolutePath().substring(currentPath.length()+1);
 				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", "");
 				relativePath = relativePath.replaceAll("\\\\", "/").replaceAll("^.*?/", "");
-				//此处为正则表达式，4个反斜杠才代表一个反斜杠
 				
 				if(!ignoreFiles.contains(relativePath))
 				{
 					if(!localFile.exists())
 					{
-						willDownload.add(new DownloadTask(localFile, mfile));
+						willDownload.add(new DownloadTask(localFile, remoteFile));
 					}
 				}
 			}
 		}
+	}
+
+	public static void delfolder(File dir)
+	{
+		if (!dir.exists())
+			return;
+
+		if (dir.isFile())
+		{
+			dir.delete();
+			return;
+		}
+
+		for (File per : dir.listFiles())
+		{
+			delfolder(per);
+		}
+
+		dir.delete();
 	}
 	
 	

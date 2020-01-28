@@ -6,17 +6,17 @@ import java.util.HashMap;
 public class RuleInstance
 {
 	private HashMap<String, File> dict;
-	private final MFolder dd;
+	private final RemoteFolder dd;
 	private final String remotePath;
 	
-	public RuleInstance(MFolder dd, HashMap<String, File> dict, String remotePath)
+	public RuleInstance(RemoteFolder dd, HashMap<String, File> dict, String remotePath)
 	{
 		this.dd = dd;
 		this.dict = dict;
 		this.remotePath = remotePath;
 	}
 	
-	public MFolder getRootDir()
+	public RemoteFolder getRootDir()
 	{
 		return dd;
 	}

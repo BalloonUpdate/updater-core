@@ -11,9 +11,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import cn.innc11.updater.client.core.callback.ui.MainWindowCallback;
 
-public class Window implements MainWindowCallback
+public class MyWindow implements MainWindowCallback
 {
 	private JFrame window;
 	private Container rootPanel;
@@ -28,10 +27,10 @@ public class Window implements MainWindowCallback
 	
 	public static void main(String[] ag) throws IOException
 	{
-		Window w = new Window();
+		MyWindow w = new MyWindow();
 	}
 	
-	public Window()
+	public MyWindow()
 	{
 		window = new JFrame();
 		rootPanel = window.getContentPane();
@@ -43,10 +42,10 @@ public class Window implements MainWindowCallback
 	
 		stateBar = new JLabel();
 	
-		window.setTitle("OS: " + System.getProperty("os.name"));
+		window.setTitle("updater客户端");
 		window.setUndecorated(false);
 		window.setAlwaysOnTop(false);
-		window.setSize(550, 400);
+		window.setSize(450, 300);
 		window.setLocationRelativeTo(null);
 		window.setDefaultCloseOperation(3);
 	
@@ -127,6 +126,11 @@ public class Window implements MainWindowCallback
 	public void changeWindowTitleText(String str) 
 	{
 		setWindowTitleText(str);
+	}
+
+	@Override
+	public String getWindowTitleText() {
+		return window.getTitle();
 	}
 
 	@Override

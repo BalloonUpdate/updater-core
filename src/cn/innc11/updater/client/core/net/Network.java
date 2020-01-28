@@ -10,40 +10,37 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import cn.innc11.updater.client.core.callback.ui.MainWindowCallback;
+import cn.innc11.updater.client.core.view.MainWindowCallback;
 import cn.innc11.updater.client.core.structure.DownloadTask;
-import cn.innc11.updater.client.core.structure.MFolder;
+import cn.innc11.updater.client.core.structure.RemoteFolder;
 import cn.innc11.updater.client.core.tools.CompareFolder;
 
-public class Nett extends NP
+public class Network extends NP
 {
 	private static final byte[] ACK_CODE = { 86, 127, 94, 88, 44, 51, 73, 32 };
 	
-	private String host;
-	private int port;
 	private Socket socket;
 	private int rulesc;
 	private HashSet<DownloadTask> downloadQueue = new HashSet<>();
 	private MainWindowCallback mWindowCallback;
 
-	public Nett(Socket socket, String host, int port, MainWindowCallback mWindowCallback) throws IOException
+	public Network(Socket socket, MainWindowCallback mWindowCallback) throws IOException
 	{
 		this.socket = socket;
-		this.host = host;
-		this.port = port;
 		this.mWindowCallback = mWindowCallback;
 		
 		netIn = new DataInputStream(socket.getInputStream());
 		netOut = new DataOutputStream(socket.getOutputStream());
 	}
 	
-	private void getFile(File file, String key, long length) throws IOException
+	private void receiveFile(File file, String key, long length) throws IOException
 	{
-		mWindowCallback.changeProgressValue(0); // 重置进度条
+		mWindowCallback.changeProgressValue(0);
 		
 		file.createNewFile();
 		
-		if(key.equals("null")) return;
+		if(key.equals("null")) return; // the KEY is the md5
+
 		netOut.writeBoolean(true);//请求下一个文件
 		
 		netOut.writeUTF(key);
@@ -55,13 +52,15 @@ public class Nett extends NP
 		byte[] buf = new byte[4096];
 		int ac = (int)(length / buf.length);
 		int bc = (int)(length % buf.length);
-		
+
+		String titleTextBuf = mWindowCallback.getWindowTitleText();
+
 		int cp = 0;
 		for (int i = 0; i < ac; i++)
 		{
 			netIn.readFully(buf);
 			mWindowCallback.changeProgressValue(++cp * 1000 / ac);
-		
+			mWindowCallback.changeWindowTitleText(titleTextBuf+"("+(cp * 100 / ac)+")");
 			fos.write(buf, 0, buf.length);
 		}
 	
@@ -79,22 +78,19 @@ public class Nett extends NP
 		for (DownloadTask per : downloadQueue)
 		{
 			mWindowCallback.appendElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
-			mWindowCallback.changeWindowTitleText(String.valueOf(++counter));
-//			System.out.println("Name："+per.fd.getName()+"   Length："+per.fd.getLength());
-			//延时600
-			try {Thread.sleep(20);} catch (InterruptedException e) {e.printStackTrace();}
+			mWindowCallback.changeWindowTitleText("收集信息("+(++counter)+")");
+			try {Thread.sleep(25);} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
-//			try {Thread.sleep(6000);} catch (InterruptedException e) {e.printStackTrace();}
 		int currentIndex = 0;
 		for (DownloadTask per : downloadQueue)
 		{
-			currentIndex++;//计数++
+			currentIndex++;
 			
-			mWindowCallback.changeWindowTitleText("队列： "+(currentIndex+"/" + downloadQueue.size()));
-			getFile(per.file, per.fd.getMD5(), per.fd.getLength());
+			mWindowCallback.changeWindowTitleText("下载队列 "+(downloadQueue.size()-currentIndex+1));
+			receiveFile(per.file, per.fd.getMD5(), per.fd.getLength());
 			mWindowCallback.removedElement(per.fd.getName() + "     -     " + per.fd.getLength() / 1024L + "Kb     -     " + per.fd.getMD5().toLowerCase());
-			try {Thread.sleep(20);} catch (InterruptedException e) {e.printStackTrace();}
+			try {Thread.sleep(5);} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		netOut.writeBoolean(false);//没有下一个文件
 		downloadQueue.clear();
@@ -104,25 +100,24 @@ public class Nett extends NP
 	{
 		rulesc = netIn.readInt(); // 获取需要同步的规则数
 		
-		mWindowCallback.setProgressIndeterminate(false); // 设置进度条为确定模式
+		mWindowCallback.setProgressIndeterminate(false);
 	
 		for (int i = 0; i < rulesc; i++)
 		{
-			String currentProgressText = (i + 1) + "/" + rulesc; // 当前进度文本
+			String currentProgressText = (i + 1) + "/" + rulesc; // 当前进度文本(规则总数)
 			
-			mWindowCallback.setProgressIndeterminate(true); // 设置进度条为不确定模式
+			mWindowCallback.setProgressIndeterminate(true);
 			
-			mWindowCallback.changeStateBarText("正在接收 "+currentProgressText+" 同步规则");
+			mWindowCallback.changeStateBarText("接收规则 "+currentProgressText);
 			
 			String clientPath = readString();
-			String virtualFolder = readString();
-			String ignore = readString();
+			String remoteFiles = readString();
+			String ignores = readString();
+
+			File localFolder = new File(clientPath);
+			RemoteFolder remoteFolder = new RemoteFolder(new JSONObject(remoteFiles));
 			
-			
-			File RRootFolder = new File(clientPath); // 真实的根目录
-			MFolder VRootFolder = new MFolder(new JSONObject(virtualFolder));//虚拟的根目录
-			
-			JSONArray ignFiles = new JSONArray(ignore);
+			JSONArray ignFiles = new JSONArray(ignores);
 			HashSet<String> ignoreFiles = new HashSet<>();
 			for(int n=0;n<ignFiles.length();n++)
 			{
@@ -130,17 +125,11 @@ public class Nett extends NP
 //				System.out.println("ignores"+n+" > "+ignFiles.getString(n).replaceAll("\\./", "").replaceAll("\\.\\\\", ""));调试输出
 			}
 			
-//			if(ignoreFiles)
+			mWindowCallback.changeStateBarText("正在比较文件 "+currentProgressText);
+			downloadQueue = new CompareFolder(remoteFolder, localFolder, ignoreFiles).compare();
 			
-			//对比文件
-			mWindowCallback.changeStateBarText("正在对比文件，进度 "+currentProgressText);
-			CompareFolder comparer = new CompareFolder(VRootFolder, RRootFolder, ignoreFiles);
-			downloadQueue = comparer.compare();
-			
-			//设置进度条为确定模式
 			mWindowCallback.setProgressIndeterminate(false);
 			
-			//下载文件
 			mWindowCallback.changeStateBarText("总进度 "+currentProgressText);
 			download();
 		}

@@ -12,23 +12,19 @@ public class MD5
 	public static String getMD5(File File)
 	{
 		String md5 = "";
-		try 
-		{
+		try {
 			FileInputStream fileInputStream = null;
 		    DigestInputStream digestInputStream = null;
 		    
-			MessageDigest digest = MessageDigest.getInstance("MD5")
-					;
+			MessageDigest digest = MessageDigest.getInstance("MD5");
 	        fileInputStream = new FileInputStream(File);
 	        digestInputStream = new DigestInputStream(fileInputStream, digest);
-	        
 	        
 	        byte[] buffer =new byte[8*1024];
 	        while (digestInputStream.read(buffer) > 0);
 	        
 	        digest = digestInputStream.getMessageDigest();
-	        
-	        
+
 	        fileInputStream.close();
 	        digestInputStream.close();
 	        

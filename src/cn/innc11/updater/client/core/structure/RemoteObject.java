@@ -6,7 +6,7 @@ import java.util.HashMap;
 import cn.innc11.updater.client.core.tools.MD5;
 import org.json.JSONObject;
 
-public abstract class MFileOrFolder
+public abstract class RemoteObject
 {
 	protected String name;
 	
@@ -24,12 +24,12 @@ public abstract class MFileOrFolder
 		
 		public Builder(File serv_local, String client_remote)
 		{
-			MFolder root = new MFolder(serv_local.getName());
+			RemoteFolder root = new RemoteFolder(serv_local.getName());
 			wle(serv_local, root);
 			desc = new RuleInstance(root, dict, client_remote);
 		}
 		
-		private void wle(File directory, MFolder parent)
+		private void wle(File directory, RemoteFolder parent)
 		{
 			for(File per : directory.listFiles())
 			{
@@ -38,13 +38,13 @@ public abstract class MFileOrFolder
 					if(per.length()>0)
 					{
 						String md5 = MD5.getMD5(per);
-						parent.append(new MFile(per.getName(), per.length(), md5));
+						parent.append(new RemoteFile(per.getName(), per.length(), md5));
 						dict.put(md5, per);
 					}
 				}
 				else
 				{
-					MFolder sub = new MFolder(per.getName());
+					RemoteFolder sub = new RemoteFolder(per.getName());
 					parent.append(sub);
 					wle(per, sub);
 				}
