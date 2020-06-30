@@ -1,6 +1,7 @@
 package cn.innc11.updater.client.core.tools;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import cn.innc11.updater.client.core.structure.DownloadTask;
 import cn.innc11.updater.client.core.structure.RemoteFile;
@@ -45,7 +46,9 @@ public class CompareFolder
 				relativePath = relativePath.replaceAll("\\./", "").replaceAll("\\.\\\\", ""); // 去掉 ./ 或者 .\
 				relativePath = relativePath.replaceAll("\\\\", "/");//.replaceAll("^.*/", "");
 
-				if(!ignoreFiles.contains(relativePath))
+				String selfPath = System.getProperty("java.class.path").replaceAll("\\.\\\\", "");
+
+				if(!ignoreFiles.contains(relativePath) && !relativePath.equals(selfPath))
 				{
 					if(remote.contains(everyLocalFile))
 					{
@@ -137,6 +140,4 @@ public class CompareFolder
 
 		dir.delete();
 	}
-	
-	
 }

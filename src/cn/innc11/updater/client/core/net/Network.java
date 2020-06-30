@@ -114,7 +114,7 @@ public class Network extends NP
 			String remoteFiles = readString();
 			String ignores = readString();
 
-			File localFolder = new File(clientPath);
+			File localFolder = new File(clientPath.isEmpty()? ".":clientPath);
 			RemoteFolder remoteFolder = new RemoteFolder(new JSONObject(remoteFiles));
 			
 			JSONArray ignFiles = new JSONArray(ignores);
